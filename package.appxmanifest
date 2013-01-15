@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/2010/manifest">
+  <Identity Name="42020JTMorris.SnarkytheSarcasmDispenser" Version="1.0.0.2" Publisher="CN=0CB64FC5-519A-43AC-99F4-8EDE774DFA9F" />
+  <Properties>
+    <DisplayName>Snarky the Sarcasm Dispenser</DisplayName>
+    <PublisherDisplayName>JTMorris</PublisherDisplayName>
+    <Logo>images\storelogo.png</Logo>
+  </Properties>
+  <Prerequisites>
+    <OSMinVersion>6.2.1</OSMinVersion>
+    <OSMaxVersionTested>6.2.1</OSMaxVersionTested>
+  </Prerequisites>
+  <Resources>
+    <Resource Language="x-generate" />
+  </Resources>
+  <Applications>
+    <Application Id="App" StartPage="default.html">
+      <VisualElements DisplayName="Snarky the Sarcasm Dispenser" Logo="images\logo_large.png" SmallLogo="images\logo_small.png" Description="Snarky the sarcasm dispenser." ForegroundText="light" BackgroundColor="#383838">
+        <DefaultTile ShowName="allLogos" WideLogo="images\logo_wide.png" ShortName="Sarcasm Dispenser" />
+        <SplashScreen Image="images\splashscreen.png" />
+      </VisualElements>
+    </Application>
+  </Applications>
+  <Capabilities>
+    <Capability Name="internetClient" />
+  </Capabilities>
+</Package>

@@ -1,0 +1,132 @@
+﻿.homepage section[role=main] {
+    margin-left: 120px;
+}
+
+
+#snarky{
+    width: 100%;
+	
+    height: 100%;
+}
+
+    #snarky #robotPic {
+		margin-top: 350px;
+        position: absolute;
+		right: 50px;
+		bottom: 30px;
+		text-align: center;
+    }
+	#snarky #robotPic img {
+		width: 300px;
+		height: 325px;
+	}
+
+#entry {
+    position: relative;
+	padding: 70px 30px;
+	border: 10px solid #000;
+	text-align: center;
+	color: #000;
+	background-color: #FFF;
+	border-radius: 240px / 140px;
+	width: 70%;
+	font-size: 1.4em;
+	display: inline-block;
+}
+#entry:before {
+	content: "";
+	position: absolute;
+	z-index: 10;
+	bottom: -85px;
+	right: 60px;
+	width: 50px;
+	height: 50px;
+	border: 10px solid #000;
+	background-color: #FFF;
+	display: block;
+	border-radius: 50px;
+}
+#entry:after {
+		content: "";
+	position: absolute;
+	z-index: 10;
+	bottom: -135px;
+	right: 10px;
+	width: 30px;
+	height: 30px;
+	border: 10px solid #000;
+	background-color: #FFF;
+	display: block;
+	border-radius: 50px;
+}
+
+span.instruction {
+	font-size: 1.5em;
+	color: #33FF33;
+}
+
+@media screen and (-ms-view-state: snapped) {
+    .homepage section[role=main] {
+        margin-left: 10px;
+    }
+	
+	#entry:before,
+	#entry:after {
+		bottom: -85px;
+		right: 50%;
+	}
+	#entry:after {
+		bottom: -150px;
+	}
+	
+	#entry {
+		margin: 0px;
+		width: 95%;
+        font-size: 1em;
+
+        max-height: 400px;
+        overflow-y: auto;
+	}
+	
+	#snarky #robotPic {
+		position: relative;
+		margin-top: 20px;
+		right: 0px;
+		bottom: 0px;
+		text-align: center;
+		width: 100%;
+	}
+	
+	#snarky #robotPic img {
+		width: 170px;
+		height: 240px;
+	}
+}
+
+@media screen and (-ms-view-state: portrait) {
+    .homepage section[role=main] {
+        margin-left: 100px;
+    }
+}
+@media screen and (-ms-view-state: filled) {
+	#entry {
+		width: 60%;		
+	}
+}
+
+@media screen and (min-width: 1900px) and (max-resolution: 110dpi) {
+	#entry {
+		font-size: 1.8em;
+	}
+}
+
+@media screen and (min-width: 2000px) and (max-resolution: 110dpi) {
+	#entry {
+		font-size: 3.1em;
+		padding: 100px 50px;
+	}
+	#snarky #robotPic img {
+		width: 520px;
+		height: 550px;
+	}
+}
