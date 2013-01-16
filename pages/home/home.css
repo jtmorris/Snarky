@@ -65,6 +65,18 @@ span.instruction {
 	color: #33FF33;
 }
 
+#myAd {
+    position: absolute;
+    z-index: 1;
+    bottom: 5px;
+    left: 5px;
+
+    border: 1px solid #FFFFFF;
+
+    width: 250px;
+    height: 250px;
+}
+
 @media screen and (-ms-view-state: snapped) {
     .homepage section[role=main] {
         margin-left: 10px;
@@ -101,11 +113,21 @@ span.instruction {
 		width: 170px;
 		height: 240px;
 	}
+	
+	#myAd {
+		display: none;
+	}
 }
 
-@media screen and (-ms-view-state: portrait) {
+@media screen and (-ms-view-state: fullscreen-portrait) {
     .homepage section[role=main] {
-        margin-left: 100px;
+        margin-left: 50px;
+		margin-right: 0px;
+    }
+	
+	#snarky #robotPic {
+		right: 0px;
+		bottom: 0px;
     }
 }
 @media screen and (-ms-view-state: filled) {
