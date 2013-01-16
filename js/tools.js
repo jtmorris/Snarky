@@ -61,3 +61,23 @@
         }
     );
 }
+
+
+
+function arrayIndexOf(a, func) {
+    if (!func || typeof (func) != 'function') {
+        return -1;
+    }
+
+    if (!a || !a.length || a.length < 1) {
+        return -1;
+    }
+
+    for (var i in a) {
+        if (func(a[i])) {
+            return i;
+        }
+    }
+
+    return -1;
+}

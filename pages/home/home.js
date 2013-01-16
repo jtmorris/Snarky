@@ -39,15 +39,25 @@
         },
 
         loadEntry: function (animateClick) {
-            var div = $("#entry");            
+            var self = this;
+
+            var notificationTimeout;
+
+            var div = $("#entry");
+            var objAdding = { id: null };
+            var listEntries;
 
             //  Check if we have a saved set of entries in the session
             var session = WinJS.Application.sessionState;
+            if (!session.usedEntries) {
+                session.usedEntries = {};
+            }
+
             if (!session.sarcasmEntries) {
                 //  Do we have any saved in a file?
-                var localFolder = Windows.Storage.ApplicationData.current.localFolder;
+                var folder = Windows.Storage.ApplicationData.current.roamingFolder;
 
-                localFolder.getFileAsync("entries.txt").then(
+                folder.getFileAsync("entries.txt").then(
                     function (file) {
                         return Windows.Storage.FileIO.readTextAsync(file);
                     }
@@ -56,35 +66,117 @@
                         if (contents) {
                             //  Okay, we have the file.  Load the data and generate a comment!
                             session.sarcasmEntries = JSON.parse(contents);
-                            putInDiv(session.sarcasmEntries);
+                            var filtered = self.getFilteredEntries(session.sarcasmEntries);
+
+                            /////   REMOVE THIS /////
+                            filtered = null;
+
+
+                            //  Update the DIV
+                            if (filtered) {
+                                objAdding = putInDiv(filtered);
+                            }
+                            else {
+                                //  Let the user know
+                                $('#notification').hide();
+                                $("#notification").text("You have exhausted Snarky's collection of sarcasm. He is trying to find some more!").fadeIn();
+                                setTimeout(function () {
+                                    $("#notification").fadeOut().text("In the meantime, Snarky has been reset.  He will continue to regale you with his pearls of wisdom.").fadeIn();
+                                    setTimeout(function () {
+                                        $("#notification").fadeOut();
+                                    }, 10000);
+                                }, 10000);
+                                
+
+                                //  Mark everything as ready to go again.
+                                for (var ind in session.sarcasmEntries) {
+                                    var item = session.sarcasmEntries[ind];
+
+                                    item.queued = true;
+                                }
+
+                                objAdding = putInDiv(session.sarcasmEntries);
+                            }
+
+                            //  Update the last displayed information of objAdding
+                            markAsRead(objAdding);
                         }
                         else {
                             log("Empty file \"entry.txt\". Expected contents.", "error", "FileIO XHR");
                             log("Loading default entries included with app.", "info", "failsafe fallback");
                             //  Well... Load the included defaults I guess
-                             putInDiv(sarcasmEntries);
+                            session.sarcasmEntries = sarcasmEntries;
+                            var filtered = self.getFilteredEntries(session.sarcasmEntries);
+                            //  Update the DIV
+                            if (filtered) {
+                                objAdding = putInDiv(filtered);
+                            }
+                            else {
+                                objAdding = putInDiv(session.sarcasmEntries);
+                            }
+
+                            //  Update the last displayed information of objAdding
+                            markAsRead(objAdding);
+
+                            //  Try auto-updating to get new contents
+                            self.tryAutoUpdate();
                         }
                     },
                     function () {
                         //  Well... Load the included defaults I guess
                         log("No file \"entry.txt\". Haven't retrieved updates from server!", "info", "FileIO XHR");
                         log("Loading default entries included with app.", "info", "failsafe fallback");
-                        putInDiv(sarcasmEntries);
+                        session.sarcasmEntries = sarcasmEntries;
+                        var filtered = self.getFilteredEntries(session.sarcasmEntries);
+                        //  Update the DIV
+                        if (filtered) {
+                            objAdding = putInDiv(filtered);
+                        }
+                        else {
+                            objAdding = putInDiv(session.sarcasmEntries);
+                        }
+                        //  Update the last displayed information of objAdding
+                        markAsRead(objAdding);
+
+                        //  Try auto-updating to get new contents
+                        self.tryAutoUpdate();
                     }
                 );
             }   //  end if(!session.sarcasmEntries)
             else {
-                //  Well...  Load them!
-                putInDiv(session.sarcasmEntries);
-            }
+                //  Load the entries from the session then
+                var filtered = self.getFilteredEntries(session.sarcasmEntries);
+                //  Update the DIV
+                if (filtered) {
+                    objAdding = putInDiv(filtered);
+                }
+                else {
+                    objAdding = putInDiv(session.sarcasmEntries);
+                }
 
-            function putInDiv(arr) {
-                var maxIndex = arr.length - 1;
+
+                //  Update the last displayed information of objAdding
+                markAsRead(objAdding);
+            }
+            
+            
+            function putInDiv(entryList) {
+                var maxIndex = entryList.length - 1;
                 var ranNum = Math.floor(Math.random() * (maxIndex + 1));
 
                 div.fadeOut(function () {
-                    div.text(arr[ranNum].entry).fadeIn();
+                    div.text(entryList[ranNum].entry).fadeIn();
                 });
+
+                return entryList[ranNum];
+            }
+
+            function markAsRead(obj) {
+                //  Update the last displayed information of objAdding
+                var now = new Date();
+                var now_utc = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
+                obj.lastDisplayed = now_utc;
+                obj.queued = false;
             }
         },
 
@@ -105,14 +197,31 @@
                         if (text) { //  Yay! It worked. Okay, save it and move on.
                             //  Save it in the session
                             var session = WinJS.Application.sessionState;
-                            session.sarcasmEntries = JSON.parse(text);
+                            var newList = JSON.parse(text);
+                            var oldList = session.sarcasmEntries;
+
+                            //  Loop through old list and copy in the lastDisplayed settings
+                            for (var key in oldList) {
+                                var o = oldList[key];
+
+                                if (o.hasOwnProperty("lastDisplayed") && o.hasOwnProperty("queued")) {
+                                    //  We need to find the corresponding object in the new array
+                                    var index = arrayIndexOf(newList, function (obj) { return (obj.id === o.id) && (obj.entry === o.entry) });
+                                    if (index >= 0) {
+                                        newList[index].lastDisplayed = o.lastDisplayed;
+                                        newList[index].queued = o.queued;
+                                    }
+                                }
+                            }
+
+                            session.sarcasmEntries = newList;
 
                             //  Cache it on the device in case there is no Internet
-                            var localFolder = Windows.Storage.ApplicationData.current.localFolder;
+                            var folder = Windows.Storage.ApplicationData.current.roamingFolder;
                             //  Save the new entries
-                            localFolder.createFileAsync("entries.txt", Windows.Storage.CreationCollisionOption.replaceExisting).then(
+                            folder.createFileAsync("entries.txt", Windows.Storage.CreationCollisionOption.replaceExisting).then(
                                 function (file) {
-                                    return Windows.Storage.FileIO.writeTextAsync(file, text);                                    
+                                    return Windows.Storage.FileIO.writeTextAsync(file, JSON.stringify(newList));                                    
                                 }
                             ).done(
                                 function () {
@@ -207,6 +316,23 @@
             }
 
             log("Skipping auto-update. Internet access restricted or not available.", "info", "connectivity tryAutoUpdate()");
+            return false;
+        },
+
+
+        getFilteredEntries: function (list) {
+            if (!list) {
+                list = session.sarcasmEntries;
+            }
+
+            var grepped = $.grep(list, function (obj) { return (obj.hasOwnProperty("queued") && obj.queued); });
+
+            if (grepped && grepped.length > 0) {
+                return grepped;
+            }
+
+            
+            //  Then every single entry has been seen...
             return false;
         }
     });

@@ -55,6 +55,25 @@
         // complete an asynchronous operation before your application is 
         // suspended, call args.setPromise().
         app.sessionState.history = nav.history;
+
+        //  Save updated entry list.
+        var session = WinJS.Application.sessionState;
+        var folder = Windows.Storage.ApplicationData.current.roamingFolder;
+
+        var str = JSON.stringify(session.sarcasmEntries);
+
+        //  Save the new entries
+        args.setPromise(
+            folder.createFileAsync("entries.txt", Windows.Storage.CreationCollisionOption.replaceExisting).then(
+                function (file) {
+                    return Windows.Storage.FileIO.writeTextAsync(file, str);
+                }
+            ).then(
+                function () {
+                    log("Saved downloaded entries to file.", "info", "FileIO XHR asynchronousEntryRetrieval()")
+                }
+            )
+        );
     };
 
     app.start();
