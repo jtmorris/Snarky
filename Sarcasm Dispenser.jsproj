@@ -65,7 +65,7 @@
     <Content Include="images\splashscreen.png" />
     <Content Include="images\storelogo.png" />
     <Content Include="js\default.js" />
-    <Content Include="js\jquery-1.8.0-win8ready.js" />
+    <Content Include="js\jquery-1_8_0-win8ready.js" />
     <Content Include="js\navigator.js" />
     <Content Include="js\sarcasmEntries.js" />
     <Content Include="js\tools.js" />
