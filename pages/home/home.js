@@ -30,15 +30,15 @@
 
             //  Setup click listener for update appbar command
             document.getElementById("cmdUpdate").addEventListener("click", function (event) {
-                self.asynchronousEntryRetrieval(true);
-            });           
+                self.tryAutoUpdate(true);
+            });
         },
 
         nextEntryEventHandler: function (event) {
             this.loadEntry();
         },
 
-        loadEntry: function (animateClick) {
+        loadEntry: function () {
             var self = this;
 
             var notificationTimeout;
@@ -49,10 +49,6 @@
 
             //  Check if we have a saved set of entries in the session
             var session = WinJS.Application.sessionState;
-            if (!session.usedEntries) {
-                session.usedEntries = {};
-            }
-
             if (!session.sarcasmEntries) {
                 //  Do we have any saved in a file?
                 var folder = Windows.Storage.ApplicationData.current.roamingFolder;
@@ -87,7 +83,6 @@
                                 //  Mark everything as ready to go again.
                                 for (var ind in session.sarcasmEntries) {
                                     var item = session.sarcasmEntries[ind];
-
                                     item.queued = true;
                                 }
 
@@ -135,7 +130,7 @@
                         markAsRead(objAdding);
 
                         //  Try auto-updating to get new contents
-                        self.tryAutoUpdate();
+                        self.tryAutoUpdate(true);
                     }
                 );
             }   //  end if(!session.sarcasmEntries)
@@ -172,11 +167,13 @@
                 var now = new Date();
                 var now_utc = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
                 obj.lastDisplayed = now_utc;
-                obj.queued = false;
+                obj.queued = false;                
             }
         },
 
         asynchronousEntryRetrieval: function (manual) {
+            var self = this;
+
             if (manual) {
                 log("Manual update triggered.", "info", "user interaction");
             }
@@ -212,18 +209,8 @@
 
                             session.sarcasmEntries = newList;
 
-                            //  Cache it on the device in case there is no Internet
-                            var folder = Windows.Storage.ApplicationData.current.roamingFolder;
-                            //  Save the new entries
-                            folder.createFileAsync("entries.txt", Windows.Storage.CreationCollisionOption.replaceExisting).then(
-                                function (file) {
-                                    return Windows.Storage.FileIO.writeTextAsync(file, JSON.stringify(newList));                                    
-                                }
-                            ).done(
-                                function () {
-                                    log("Saved downloaded entries to file.", "info", "FileIO XHR asynchronousEntryRetrieval()")
-                                }
-                            );
+                            //  Save them to the disk
+                            self.saveEntriesToFile(session.sarcasmEntries);
 
                             //  Save the current date and time in the last update settings.
                             var roamingSettings = Windows.Storage.ApplicationData.current.roamingSettings.values;
@@ -245,14 +232,14 @@
             );
         },
 
-        tryAutoUpdate: function () {
+        tryAutoUpdate: function (force) {
             //  First, let's only update every so often... Say every 2 days
             //  So check if it has been two days since the last update.
             var roamingSettings = Windows.Storage.ApplicationData.current.roamingSettings.values;
             var last = roamingSettings["lastEntryUpdate"];
 
-            //  If there is a last, check if it's been 2 days.  Otherwise, update.
-            if (last) {
+            //  If there is a last, check if it's been 2 days and we're not forcing this.  Otherwise, update.
+            if (last && !force) {
                 var cur = new Date();
                 var nextCheck = new Date();
                 nextCheck.setDate(last.getDate() + 2);
@@ -321,7 +308,17 @@
                 list = session.sarcasmEntries;
             }
 
-            var grepped = $.grep(list, function (obj) { return (obj.hasOwnProperty("queued") && obj.queued); });
+            var grepped = $.grep(list, function (obj) {
+                if (!obj.hasOwnProperty("queued")) {
+                    return true;
+                }
+
+                if (obj.hasOwnProperty("queued") && obj.queued) {
+                    return true;
+                }
+
+                return false;
+            });
 
             if (grepped && grepped.length > 0) {
                 return grepped;
@@ -330,6 +327,20 @@
             
             //  Then every single entry has been seen...
             return false;
+        },
+
+        saveEntriesToFile: function (entries) {
+            var folder = Windows.Storage.ApplicationData.current.roamingFolder;
+            //  Save the new entries
+            folder.createFileAsync("entries.txt", Windows.Storage.CreationCollisionOption.replaceExisting).then(
+                function (file) {
+                    return Windows.Storage.FileIO.writeTextAsync(file, JSON.stringify(entries));
+                }
+            ).done(
+                function () {
+                    log("Saved downloaded entries to file.", "info", "FileIO XHR asynchronousEntryRetrieval()")
+                }
+            );
         }
     });
 })();
