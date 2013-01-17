@@ -68,10 +68,6 @@
                             session.sarcasmEntries = JSON.parse(contents);
                             var filtered = self.getFilteredEntries(session.sarcasmEntries);
 
-                            /////   REMOVE THIS /////
-                            filtered = null;
-
-
                             //  Update the DIV
                             if (filtered) {
                                 objAdding = putInDiv(filtered);
